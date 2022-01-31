@@ -8,7 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigTableClientMocking.Tests", "BigTableClientMocking.Tests\BigTableClientMocking.Tests.csproj", "{367195E3-0A8B-4E93-9FC0-03767F48F998}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BigtableClientMocking.Tests", "BigtableClientMocking.Tests\BigtableClientMocking.Tests.csproj", "{367195E3-0A8B-4E93-9FC0-03767F48F998}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
