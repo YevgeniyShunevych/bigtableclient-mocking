@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Google.Cloud.Bigtable.Common.V2;
 using Google.Cloud.Bigtable.V2;
 
-namespace BigTableClientMocking.Tests
+namespace BigtableClientMocking.Tests
 {
     public class ClassUnderTest
     {

@@ -1,4 +1,4 @@
-﻿namespace BigTableClientMocking.Tests
+﻿namespace BigtableClientMocking.Tests
 {
     public class SomeItem
     {

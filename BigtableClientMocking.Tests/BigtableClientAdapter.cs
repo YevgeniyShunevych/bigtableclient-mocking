@@ -3,7 +3,7 @@ using Google.Api.Gax.Grpc;
 using Google.Cloud.Bigtable.Common.V2;
 using Google.Cloud.Bigtable.V2;
 
-namespace BigTableClientMocking.Tests
+namespace BigtableClientMocking.Tests
 {
     public class BigtableClientAdapter : IBigtableClientAdapter
     {
