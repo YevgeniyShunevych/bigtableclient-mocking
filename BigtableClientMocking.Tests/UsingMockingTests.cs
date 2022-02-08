@@ -12,19 +12,19 @@ using NUnit.Framework;
 namespace BigtableClientMocking.Tests
 {
     [TestFixture]
-    public class Tests
+    public class UsingMockingTests
     {
         [Test]
-        public async Task RegularTest()
+        public async Task StraightforwardTest()
         {
             DateTime endDate = DateTime.UtcNow;
 
             var bigtableClientAdapterMock = new Mock<IBigtableClientAdapter>(MockBehavior.Strict);
-            var sut = new ClassUnderTest(bigtableClientAdapterMock.Object);
+            var sut = new ClassUnderTest(bigtableClientAdapterMock.Object, "instance1");
 
-            TableName tableName = new TableName("proj", "inst", "tabl");
+            TableName tableName = new TableName("project1", "instance1", "table1");
 
-            RowSet rowSet = RowSet.FromRowKeys("row1", "row2");
+            RowSet rowSet = RowSet.FromRowKey("key1");
 
             RowFilter filter = RowFilters.Chain(
                 RowFilters.TimestampRange(null, endDate),
@@ -38,16 +38,16 @@ namespace BigtableClientMocking.Tests
             Family family = new Family { Name = "family1" };
             row1.Families.Add(family);
             Column column = new Column { Qualifier = ByteString.CopyFromUtf8("col1") };
-            column.Cells.Add(new Cell { Value = ByteString.CopyFromUtf8("name1") });
+            column.Cells.Add(new Cell { Value = ByteString.CopyFromUtf8("val1") });
             family.Columns.Add(column);
 
             bigtableClientAdapterMock.Setup(x => x.ReadRows(tableName, rowSet, filter, null, null))
                 .Returns(setupRows.ToAsyncEnumerable());
 
-            var result = await sut.GetSomeItems(endDate);
+            var result = await sut.GetSomeItems("table1", "key1", endDate);
             result.Should().BeEquivalentTo(new[]
             {
-                new SomeItem { Key = "key1", Name = "name1" }
+                new SomeItem { Key = "key1", Name = "val1" }
             });
 
             bigtableClientAdapterMock.VerifyAll();
@@ -59,11 +59,11 @@ namespace BigtableClientMocking.Tests
             DateTime endDate = DateTime.UtcNow;
 
             var bigtableClientAdapterMock = new Mock<IBigtableClientAdapter>(MockBehavior.Strict);
-            var sut = new ClassUnderTest(bigtableClientAdapterMock.Object);
+            var sut = new ClassUnderTest(bigtableClientAdapterMock.Object, "instance1");
 
-            TableName tableName = new TableName("proj", "inst", "tabl");
+            TableName tableName = new TableName("project1", "instance1", "table1");
 
-            RowSet rowSet = RowSet.FromRowKeys("row1", "row2");
+            RowSet rowSet = RowSet.FromRowKey("key1");
 
             RowFilter filter = RowFilters.Chain(
                 RowFilters.TimestampRange(null, endDate),
@@ -72,16 +72,16 @@ namespace BigtableClientMocking.Tests
             Row[] setupRows = new Row[]
             {
                 new RowBuilder("key1")
-                    .AddCellValue("family1", "col1", "name1")
+                    .AddCellValue("family1", "col1", "val1")
             };
 
             bigtableClientAdapterMock.Setup(x => x.ReadRows(tableName, rowSet, filter, null, null))
                 .Returns(setupRows.ToAsyncEnumerable());
 
-            var result = await sut.GetSomeItems(endDate);
+            var result = await sut.GetSomeItems("table1", "key1", endDate);
             result.Should().BeEquivalentTo(new[]
             {
-                new SomeItem { Key = "key1", Name = "name1" }
+                new SomeItem { Key = "key1", Name = "val1" }
             });
 
             bigtableClientAdapterMock.VerifyAll();
