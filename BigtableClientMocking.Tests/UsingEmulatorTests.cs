@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
+using DotNet.Testcontainers.Containers;
+using DotNet.Testcontainers.Containers.Builders;
+using DotNet.Testcontainers.Containers.Modules;
+using DotNet.Testcontainers.Containers.WaitStrategies;
 using FluentAssertions;
 using Google.Api.Gax.Grpc.GrpcCore;
 using Google.Cloud.Bigtable.Admin.V2;
@@ -18,6 +22,8 @@ namespace BigtableClientMocking.Tests
 
         private const string BigtableTableId = "table1";
 
+        private IDockerContainer _cloudSdkContainer;
+
         private BigtableClient _bigtableClient;
 
         private BigtableTableAdminClient _bigtableTableAdminClient;
@@ -26,20 +32,43 @@ namespace BigtableClientMocking.Tests
 
         private ClassUnderTest _sut;
 
+        [OneTimeSetUp]
+        public async Task SetUpFixture()
+        {
+            var containerBuilder = new TestcontainersBuilder<TestcontainersContainer>()
+                .WithImage("gcr.io/google.com/cloudsdktool/cloud-sdk:emulators")
+                .WithName("cloud-sdk-emulators")
+                .WithPortBinding(8086, 8086)
+                .WithExposedPort(8086)
+                .WithCommand("/bin/sh", "-c", "gcloud beta emulators bigtable start --host-port=0.0.0.0:8086")
+                .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8086));
+
+            _cloudSdkContainer = containerBuilder.Build();
+            await _cloudSdkContainer.StartAsync();
+        }
+
+        [OneTimeTearDown]
+        public async Task TearDownFixture()
+        {
+            if (_cloudSdkContainer != null)
+                await _cloudSdkContainer.DisposeAsync();
+        }
+
         [SetUp]
         public void SetUp()
         {
             string _bigtableInstanceId = Guid.NewGuid().ToString();
 
-            var invoker = new GcpCallInvoker("localhost:8086", ChannelCredentials.Insecure, GrpcCoreAdapter.Instance.ConvertOptions(BigtableServiceApiSettings.GetDefault().CreateChannelOptions()));
+            var callInvoker = new GcpCallInvoker(
+                "localhost:8086",
+                ChannelCredentials.Insecure,
+                GrpcCoreAdapter.Instance.ConvertOptions(BigtableServiceApiSettings.GetDefault().CreateChannelOptions()));
 
-            _bigtableClient = new BigtableClientBuilder { CallInvoker = invoker }
+            _bigtableClient = new BigtableClientBuilder { CallInvoker = callInvoker }
                 .Build();
 
-            _bigtableTableAdminClient = new BigtableTableAdminClientBuilder { CallInvoker = invoker }
+            _bigtableTableAdminClient = new BigtableTableAdminClientBuilder { CallInvoker = callInvoker }
                 .Build();
-
-            _bigtableTableName = new TableName(BigtableProjectId, _bigtableInstanceId, BigtableTableId);
 
             _bigtableTableAdminClient.CreateTable(
                 new InstanceName(BigtableProjectId, _bigtableInstanceId),
@@ -59,13 +88,16 @@ namespace BigtableClientMocking.Tests
                     }
                 });
 
+            _bigtableTableName = new TableName(BigtableProjectId, _bigtableInstanceId, BigtableTableId);
+
             _sut = new ClassUnderTest(new BigtableClientAdapter(_bigtableClient), _bigtableInstanceId);
         }
 
         [TearDown]
         public void TearDown()
         {
-            _bigtableTableAdminClient.DeleteTable(_bigtableTableName);
+            if (_bigtableTableName != null)
+                _bigtableTableAdminClient.DeleteTable(_bigtableTableName);
         }
 
         [Test]
